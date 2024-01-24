@@ -1,0 +1,32 @@
+{
+    "id": "14455862",
+    "path": "E:/9code/R script/tiydemodel/7/tellIngstory/W/outputs/paper/p.Rmd",
+    "project_path": "outputs/paper/p.Rmd",
+    "type": "r_markdown",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1706029797931.0,
+    "source_on_save": false,
+    "relative_order": 9,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "211,0",
+        "scrollLine": "27",
+        "last_setup_crc32": "9ec964da9be192bc",
+        "rmdVisualMode": "false",
+        "rmdVisualWrapConfigured": "true",
+        "docOutlineVisible": "1",
+        "rmdVisualCollapsedChunks": "",
+        "rmdVisualModeLocation": "5926:2700"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1706067159,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1706067159762,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,267 @@
+---
+title: "The scale of crime that occurred in Toronto between 2014 and 2022: gender, age, and type of crime"
+author: "haohua wang"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+format: pdf
+abstract: "Criminal activities pose a pervasive and significant social issue globally,
+  drawing attention and concern from nations worldwide. Utilizing data from Toronto,
+  we conducted an analysis focusing on crime scale with respect to gender, age, year,
+  and crime type. From a gender perspective, irrespective of whether the perpetrators
+  are adults or adolescents, male offenders dominate the majority. In terms of age,
+  individuals between 25 to 34 years old represent the primary age group involved
+  in criminal activities. Examining the trend over the years, the crime rate hit its
+  lowest point in 2020, potentially influenced by the COVID-19 pandemic. Analyzing
+  crime types reveals that crime against the person stands out as the predominant
+  category."
+bibliography: references.bib
+---
+
+# Introduction
+
+Entering the 21st century, the rapid development and application of digital technology have ushered in unprecedented progress in media such as the internet and communication. This has not only allowed people to experience the fast-paced changes of the era but also provided them with a more convenient lifestyle. However, on the flip side of this rapid societal development, the widening economic gap has led to an exacerbation of social inequality. Such inequality may give rise to social tension and discontent, potentially contributing to an increase in crime rates.
+
+To gain a more accurate understanding of the overall scale of criminal behavior, we plan to analyze crime from four perspectives: gender, age, year, and crime type. Research indicates significant differences between male and female involvement in crime, with certain types of violent crimes being more prevalent among males [@gendercrime]. Additionally, criminal behavior is influenced by societal changes, and there is a correlation between age and criminal activity [@agecrime]. Adolescents, due to immature mental development and the lack of a fully established framework of values, worldviews, and life perspectives, may be more susceptible to external influences leading them towards criminal paths. As age increases, individuals mature, develop a greater sense of responsibility, and exhibit a gradual decrease in criminal behavior [@Manasse]. Moreover, the occurrence of different types of crimes varies.
+
+In the Data section, we utilize information from the OpendataToronto database for analysis, along with detailing the data cleaning procedures applied to these datasets. The Results section presents observed trends and correlations. The Discussion section delves into additional insights and discusses potential measurement errors and limitations in this analysis. Finally, the paper concludes with a Conclusion section summarizing the main findings.
+
+# Data
+
+Data (police-annual-statistical-report-arrested-and-charged-persons) used in this paper are retrieved from Open Data Toronto Portal through the library opendatatoronto [@opendatatoronto]. And the corresponding definitions of variables are shown in the table. Data was cleaned (Considering that there is some uninformative content in the data, such as "Unknown", we feel that this irrelevant information is lost) and analyzed using the open source statistically programming language R [@R], using functionalities from tidymodels [@tidymodels], ggplot2 [@ggplot2], bruceR [@bruceR], paletteer[@paletteer] and knitr [@knitr]. Details of the data extraction and cleaning processes are discussed in the subsections below.
+
+| Variable          | Description                                    |
+|-------------------|------------------------------------------------|
+| \_id              | Unique row identifier for Open Data database   |
+| ARREST_YEAR       | Year arrest was made                           |
+| DIVISION          | Geographic division where crime took place     |
+| HOOD_158          | Identifier of neighbourhood                    |
+| NEIGHBOURHOOD_158 | Neighbourhood where crime took place           |
+| SEX               | Sex of identified victim                       |
+| AGE_COHORT        | Age cohort of identified victim                |
+| AGE_GROUP         | Age group of identified victim, adult or youth |
+| CATEGORY          | Crime category                                 |
+| SUBTYPE           | Crime category subtype                         |
+| ARREST_COUNT      | Count of arrested and charged person           |
+
+
+
+
+```{r}
+#| echo = FALSE
+#| message = FALSE
+#|  warning = FALSE
+#|  results = "hide"
+library(tidymodels)
+library(bruceR)
+library(knitr)
+library(janitor)
+library(paletteer)
+data <- read.csv("Arrested_Charged_Person.csv") |>
+  clean_names()
+data[data == "Unknown"] <- NA
+data <- data[complete.cases(data), ]
+
+a <- Freq(data$sex)
+b <- Freq(data$age_group)
+c <- Freq(data$age_cohort)
+d <- Freq(data$category)
+e <- Freq(data$division)
+```
+
+## Data Description
+
+The dataset captures the number of arrests and charges for males and females between 2014 and 2022. As seen in Table @ref(tab:t1), the number of male offenders (91,004) far exceeds female offenders (37,961). From Table @ref(tab:t2), it can be observed that the proportion of adult offenders (89.3%) is significantly higher than that of juvenile offenders (10.7%). Furthermore, Table @ref(tab:t3) reveals that the age group with the highest crime occurrence rate is 25 to 34 years old (22.6%). As shown in Figure @ref(fig:p1), the "Crimes Against the Person" crime type is the most frequently occurring (27.5%). Table @ref(tab:t4) indicates that Division D55 has the highest crime occurrence rate (9.6%).
+
+```{r t1}
+#| echo=FALSE
+#| warning=FALSE
+a |> kable(caption = "Sex ratio in criminal behavior")
+```
+
+```{r t2}
+#| echo=FALSE
+#| warning=FALSE
+b |> kable(caption = "Proportion of juveniles and adults in criminal behavior")
+```
+
+```{r t3}
+#| echo=FALSE
+#| warning=FALSE
+c |> kable(caption = "Age ratio in criminal behavior")
+```
+
+```{r p1}
+#| fig.height=8
+#| fig.width=10
+#| echo=FALSE
+#| warning = FALSE
+#| fig.pos = "H"
+#| fig.align = "center"
+#| fig.showtext = TRUE
+#| fig.cap = "Crime Count by Category"
+eda2 <- data |>
+  group_by(category) |>
+  summarize(crime = n())
+ggplot(eda2, aes(x = category, y = crime, fill = category)) +
+  geom_bar(stat = "identity", color = "black") + 
+  geom_text(aes(label = crime), vjust = -0.5, hjust = 0.5, size = 3, color = "black") +
+  scale_fill_brewer(palette = "Set1") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Crime Count by Category", x = "Category", y = "Count")
+```
+
+```{r t4, echo=FALSE, warning=FALSE}
+e |> kable(caption = "Division ratio in criminal behavior")
+```
+
+# Results
+
+We plotted the crime numbers between 2014 and 2022, as shown in Figure @ref(fig:p2). During this period, the crime count in Toronto peaked in 2016 and gradually declined thereafter, reaching its lowest point in 2020. The crime growth rate from 2020 to 2021 was the lowest, possibly due to the impact of the pandemic. Additionally, we compared the crime ratios between males and females in different years (Figure @ref(fig:p3)), the male-to-female ratio among adult and minor offenders (Figure @ref(fig:p4)), and the male-to-female ratio for different crime types (@\ref(fig:p5)). From these visuals, it is evident that the probability of males engaging in criminal behavior is significantly higher than females, regardless of adulthood or minority. Moreover, the probability of males committing crimes against others is also the highest. We created bar plots of crime types in different divisions (Figure @ref(fig:p6)), revealing that in Division D55, "Crime Against Property," "Crimes Against the Person," and "Other Criminal Code Violations" are the most prevalent crime types.
+
+On the other hand, we conducted statistical analyses, yielding the following information: Firstly, through chi-square tests on age groups and gender, a p-value less than 0.05 was obtained (p < 2.2e-16), indicating an association between age groups (Adult and Youth) and gender (Male and Female). Secondly, chi-square tests on crime types and gender resulted in a p-value less than 0.05 (p < 2.2e-16), indicating an association between crime types and gender (Male and Female). Simultaneously, chi-square tests on age groups (Adult and Youth) and crime types yielded a p-value less than 0.05 (p < 2.2e-16), indicating an association between crime types and age groups (Adult and Youth).
+
+```{r p2}
+#| fig.height=8
+#| fig.width=10
+#| echo=FALSE
+#| warning = FALSE
+#| fig.pos = "H"
+#| fig.align = "center"
+#| fig.showtext = TRUE
+#| fig.cap = "Crime Count Over Years"
+eda1 <- data |>
+  group_by(arrest_year) |>
+  summarize(crime = n())
+ggplot(eda1, aes(x = arrest_year, y = crime)) +
+  geom_line(color="blue",linewidth = 2) + 
+  geom_text(aes(label = crime), vjust = 0.5, hjust = -0.2, size = 4) +
+  theme_bw() +
+  labs(title = "Crime Count Over Years", x = "Year", y = "Count")
+
+```
+
+```{r p3}
+#| fig.height=8
+#| fig.width=10
+#| echo=FALSE
+#| warning = FALSE
+#| fig.pos = "H"
+#| fig.align = "center"
+#| fig.showtext = TRUE
+#| fig.cap = "Crime Count by Sex and Arrest_yaer"
+eda4 <- data %>%
+  group_by(sex, arrest_year) %>%
+  summarize(crime = n(), .groups = "drop")
+ggplot(eda4, aes(x = arrest_year, y = crime, color = sex)) + 
+  geom_line(aes(linetype = sex), linewidth = 2) + 
+  geom_text(aes(label = crime), position = position_dodge(width = 0.9), vjust = -0.5, size = 3, color = "black") +
+  scale_color_brewer(palette = "Set1") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Crime Count by Sex and Arrest_year",
+       x = "Arrest_year", y = "Count", color = "Sex") +
+  guides(linetype = guide_legend(title = "Sex"))
+```
+
+```{r p4}
+#| fig.height=8
+#| fig.width=10
+#| echo=FALSE
+#| warning = FALSE
+#| fig.pos = "H"
+#| fig.align = "center"
+#| fig.showtext = TRUE
+#| fig.cap = "Crime Count by Sex and Age_group"
+eda3 <- data %>%
+  group_by(sex, age_group) %>%
+  summarize(crime = n(), .groups = "drop")
+ggplot(eda3, aes(x = age_group, y = crime, fill = sex)) + 
+  geom_bar(stat = "identity", position = "dodge", color = "black") + 
+  geom_text(aes(label = crime), position = position_dodge(width = 0.9), vjust = -0.5, size = 3, color = "black") +
+  scale_fill_brewer(palette = "Set1") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Crime Count by SEX and AGE_GROUP",
+       x = "Age_group", y = "Count")
+```
+
+```{r p5}
+#| fig.height=8
+#| fig.width=10
+#| echo=FALSE
+#| warning = FALSE
+#| fig.pos = "H"
+#| fig.align = "center"
+#| fig.showtext = TRUE
+#| fig.cap = "Crime Count by Sex and Category"
+eda5 <- data %>%
+  group_by(sex, category) %>%
+  summarize(crime = n(), .groups = "drop")
+ggplot(eda5, aes(x = category, y = crime, fill = sex)) + 
+  geom_bar(stat = "identity", position = "dodge", color = "black") + 
+  geom_text(aes(label = crime), position = position_dodge(width = 0.9), vjust = -0.5, size = 3, color = "black") +
+  scale_color_brewer(palette = "Set1") + 
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Crime Count by Sex and Category",
+       x = "Category", y = "Count")
+```
+
+```{r p6}
+#| fig.height=8
+#| fig.width=10
+#| echo=FALSE
+#| warning = FALSE
+#| fig.pos = "H"
+#| fig.align = "center"
+#| fig.showtext = TRUE
+#| fig.cap = "Crime Count by Division and Category"
+eda6 <- data %>%
+  group_by(division, category) %>%
+  summarize(crime = n(), .groups = "drop")
+ggplot(eda6, aes(x = division, y = crime, fill = category)) + 
+  geom_bar(stat = "identity", position = "stack", color = "black") + 
+  scale_fill_paletteer_d("RColorBrewer::Paired") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Crime Count by Division and Category",
+       x = "Division", y = "Count")
+```
+
+```{r}
+#| echo=FALSE
+#| warning=FALSE
+tab1 <- ftable(data$age_group,data$sex)
+chisq.test(tab1)
+tab2 <- ftable(data$category,data$sex)
+chisq.test(tab2)
+tab3 <- ftable(data$category,data$age_group)
+chisq.test(tab3)
+```
+
+
+# Discussion
+
+In this study, we conducted a detailed analysis of crime data in Toronto from 2014 to 2022, obtaining crucial information about criminal behavior. The following is a discussion of our main findings:
+
+Firstly, through the time series plot (Figure @ref(fig:p2)), we observed that 2016 was the peak period for crime in Toronto, followed by a gradual decline, especially in 2020 where the crime growth rate reached its lowest point, possibly due to the impact of the COVID-19 pandemic. This trend aligns with the global tendency of reduced crime activities during the pandemic.
+
+Secondly, we compared the crime ratios between males and females in different years (Figure @ref(fig:p3)) and found that the number of male offenders far exceeds that of females. Furthermore, we differentiated between adults and minors, observing that both male adult and minor offenders outnumber their female counterparts. This emphasizes significant gender differences in criminal behavior.
+
+Additionally, we delved into the proportions of males and females in different crime categories (Figure @ref(fig:p5)). The results revealed significantly higher probabilities of criminal behavior among males across all crime types. Particularly, in "Crimes Against the Person," the male proportion was notably higher, indicating gender influence on the selection of different crime types.
+
+Moreover, we presented bar plots of crime types in different divisions (Figure @ref(fig:p6)). The charts illustrated that in Division D55, "Crime Against Property," "Crimes Against the Person," and "Other Criminal Code Violations" were the predominant crime types.
+
+In terms of statistical analysis, we conducted chi-square tests to explore associations between different variables. The results of the chi-square tests indicated significant associations between age groups and gender, crime types and gender, as well as age groups and crime types. This further emphasizes the interactions between gender, age, and crime types, providing additional insights into our understanding of criminal behavior.
+
+# Conclusion
+
+In conclusion, our comprehensive analysis of crime data in Toronto from 2014 to 2022, utilizing visualizations and statistical methods, has provided a more nuanced understanding of crime patterns. These findings not only contribute to understanding the social context of criminal behavior but also offer valuable information for relevant decision-making and preventive measures. Future research could explore these associations further and propose more precise crime prevention strategies based on the study results.
+
+However, it is essential to note that the data used in this study is regional and may not be universally applicable. If there is more time, a more in-depth analysis from various perspectives, such as economic factors in different regions or individual education levels, could be pursued. Additionally, this study leans towards quantitative analysis and may not thoroughly investigate the underlying psychological mechanisms of criminal behavior.
+
+In summary, this study provides a profound insight into Toronto's crime patterns, but further research is needed for interpretation and prediction. By refining methods and considering more factors, a more comprehensive understanding of criminal behavior can be achieved, contributing to more effective crime prevention and social governance.
+
+# References
+
+git clone 

@@ -1,0 +1,5 @@
+"0","library(tidymodels)"
+"0","library(bruceR)"
+"0","library(knitr)"
+"0","data <- read.csv(""Arrested_Charged_Person.csv"") |>"
+"0","  clean_names()"

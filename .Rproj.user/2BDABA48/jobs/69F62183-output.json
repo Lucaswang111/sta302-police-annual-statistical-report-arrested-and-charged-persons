@@ -1,0 +1,3 @@
+[2,"\n"]
+[1,"Error in library.dynam(lib, package, package.lib) : \r\n  DLL 'xfun' not found: maybe not installed for this architecture?\r\nCalls: :: ... namespaceImportFrom -> asNamespace -> loadNamespace -> library.dynam\r\nExecution halted\r\n"]
+[1,"R scripting front-end version 3.6.1 (2019-07-05)\r\n\nUnable to locate an installed version of R.\nInstall R from https://cloud.r-project.org/\n\n"]

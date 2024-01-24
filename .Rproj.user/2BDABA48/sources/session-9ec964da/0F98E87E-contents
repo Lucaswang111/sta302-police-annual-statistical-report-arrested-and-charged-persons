@@ -1,0 +1,120 @@
+packages <- c("tidymodels", "stargazer","dplyr",
+              "ggplot2","bruceR","knitr","GGally")
+for (pkg in packages) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg)
+  }
+  library(pkg, character.only = TRUE)
+}
+
+data <- read.csv("arr.csv")
+
+# 1. Perform an exploratory analysis of the data and summarise your findings. As well
+# as producing suitable plots that examine the relationship between being released
+# and the available explanatory variables, you should also present some numerical
+# summaries.
+
+Describe(data[,-3])
+
+ggplot(data, aes(x = "", fill = factor(released))) +
+  geom_bar(width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  theme_minimal() +
+  scale_fill_manual(values = c("#bd9191", "#7090a2"), name = "Release") +
+  labs(title = "Release Distribution", fill = "Release") +
+  theme(axis.text = element_blank(), 
+        axis.title = element_blank(),
+        panel.grid = element_blank(),
+        plot.title = element_text(hjust = 0.5))
+
+eda1 <- data %>%
+  group_by(year) %>%
+  summarize(released_count = sum(released),
+            arrested_count = n())
+eda1 %>% 
+  ggplot(aes(x = year)) +
+  geom_line(aes(y = released_count, color = "Released"), size = 1) +
+  geom_line(aes(y = arrested_count, color = "ALL"), size = 1, linetype = "dashed") +
+  geom_point(aes(y = released_count), size = 3) +
+  geom_point(aes(y = arrested_count), size = 3, shape = 2) +
+  geom_text(aes(y = released_count, label = released_count), vjust = -0.5, hjust = -0.5, size = 3) +
+  geom_text(aes(y = arrested_count, label = arrested_count), vjust = 0.5, hjust = -0.5, size = 3) +
+  theme_bw() +
+  labs(title = "Released vs. ALL Over Years", x = "Year", y = "Count") +
+  scale_color_manual(values = c("Released" = "blue", "ALL" = "red")) +
+  guides(color = guide_legend(title = "Count Type"))
+
+# Released vs. Female
+(tab1 <- ftable(data$released,data$female))
+chisq.test(tab1)
+data %>% ggplot(aes(x=factor(released), fill=factor(female))) +
+  geom_bar(position="dodge", stat="count") +
+  labs(title="Released vs. Female", x="Released", y="Count") +
+  scale_fill_manual(values=c("0"="skyblue", "1"="lightpink")) +
+  theme_bw()
+
+1# Released vs. Ethnicity
+(tab2 <- ftable(data$released,data$white))
+chisq.test(tab2)
+data %>% ggplot(aes(x=factor(released), fill=factor(white))) +
+  geom_bar(position="dodge", stat="count") +
+  labs(title="Released vs. Ethnicity", x="Released", y="Count") +
+  scale_fill_manual(values=c("0"="lightgreen", "1"="orange")) +
+  theme_bw()
+
+# Released vs. Employed
+(tab3 <- ftable(data$released,data$empl))
+chisq.test(tab3)
+data %>% ggplot(aes(x=factor(released), fill=factor(empl))) +
+  geom_bar(position="dodge", stat="count") +
+  labs(title="Released vs. Employed", x="Released", y="Count") +
+  scale_fill_manual(values=c("0"="#f5b19e", "1"="#de3b00")) +
+  theme_bw()
+
+# Released vs. Age
+t.test(data$released,data$age) # p<0.05
+data %>% ggplot(aes(x=as.factor(released),y=age)) +
+  geom_boxplot(fill = "#01af94")+
+  labs(title="Released vs. Age", x="Released", y="Age") +
+  theme_bw()
+
+# Released vs. Checks
+(tab4 <- ftable(data$released,data$checks))
+chisq.test(tab4)
+data %>% ggplot(aes(x=factor(released), fill=factor(checks))) +
+  geom_bar(position="dodge", stat="count") +
+  labs(title="Released vs. Checks", x="Released", y="Count") +
+  scale_fill_brewer(palette="Set2") +  
+  theme_bw()
+
+
+# 2. Model the relation between being released and the other variables using the appro-
+#   priate GLM with canonical link function. Carry out model selection to examine
+# the relationship between the possible explanatory variables and being released.
+# Include the interaction white:age but do not consider other interactions. Investigate
+# whether the variable year should be included as is (and so is a time trend), or as year
+# indicators (as.factor).
+
+mod1 <- glm(released ~ . + white:age, 
+           data = data, family = binomial)
+mod2 <- glm(released ~ . + white:age-female, 
+            data = data, family = binomial)
+stargazer(mod1,mod2,type="text",ci = TRUE, ci.level = 0.95)
+kable(tidy(mod2))
+
+# 3. Assess the quality of the model fit using suitable methods.
+
+AIC(mod1,mod2)
+BIC(mod1,mod2)
+
+# 4. Interpret your final model carefully. In particular, present and interpret the multi-
+#   plicative estimated effects on the odds ratio scale of the variables included in your
+# final model. Include 95% confidence intervals for these effects.
+
+confint(mod2) # 95CI
+ggcoef(mod2,conf.int = TRUE,
+       conf.level = 0.95)+theme_bw()
+
+# Calculate and comment on an estimate for the dispersion parameter \phi
+
+summary(mod2)$dispersion # close to 1
